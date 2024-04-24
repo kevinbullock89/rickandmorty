@@ -39,24 +39,39 @@ def load_rick_and_morty_data_to_bronze(table_name, url):
 
 # COMMAND ----------
 
-def load_rick_and_morty_bronze_to_silver(bronze_path_characters):
+def load_rick_and_morty_bronze_to_silver(bronze_path_characters, bronze_table):
     df = spark.read.option("multiline", "true").json(bronze_path_characters)
 
     flatterned_df = df.select(explode("results"))
 
-    select_flattened_df = flatterned_df.select(
-        abs(hash(col("col.id"))).alias("id"),
-        col("col.name"),
-        col("col.species"),
-        col("col.origin.name").alias("origin_name"),
-        col("col.status"),
-        col("col.location.name").alias("location_name"),
-    )
+    if bronze_table == "Characters":
 
-    print(f"load data {select_flattened_df}")
-    select_flattened_df.write.format("delta").option(
-        "path", f"{MOUNT_POINT}/{silver}"
-    ).mode("overwrite").saveAsTable(f"{silver}.`Characters`")
+        select_flattened_df = flatterned_df.select(
+            abs(hash(col("col.id"))).alias("id"),
+            col("col.name"),
+            col("col.species"),
+            col("col.origin.name").alias("origin_name"),
+            col("col.status"),
+            col("col.location.name").alias("location_name"),
+        )
+
+        print(f"load data {select_flattened_df}")
+        select_flattened_df.write.format("delta").option(
+            "path", f"{MOUNT_POINT}/{silver}/{characters_table}"
+        ).mode("overwrite").saveAsTable(f"{silver}.{characters_table}")
+
+    elif bronze_table == "Location":
+        df_final = flatterned_df.select(
+            abs(hash(col("col.id"), col("col.name"))).alias("id"),
+            col("col.name"),
+            col("col.type"),
+            col("col.dimension"),
+        )
+
+        print(f"load data {df_final}")
+        df_final.write.format("delta").option(
+            "path", f"{MOUNT_POINT}/{silver}/{location_table}"
+        ).mode("overwrite").saveAsTable(f"{silver}.{location_table}")
 
 # COMMAND ----------
 

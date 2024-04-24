@@ -15,3 +15,8 @@ locations_url = 'https://rickandmortyapi.com/api/location'
 episodes_url = 'https://rickandmortyapi.com/api/episode'
 
 bronze_path_characters = f"{MOUNT_POINT}/{bronze}/{characters_table}/*.json"
+bronze_path_location = f"{MOUNT_POINT}/{bronze}/{location_table}/*.json"
+
+# COMMAND ----------
+
+
